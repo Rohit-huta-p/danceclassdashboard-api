@@ -61,7 +61,10 @@ const loginUser = async (req, res) => {
         if(isPassChecked){
             console.log(isPassChecked);
             const token = generateToken(user._id);
-            res.cookie('token', token,{httpOnly:true});
+            res.cookie('token', token, {
+                secure: true, // Set to true if using HTTPS
+                sameSite: 'Strict', // Adjust according to your cross-site requirements
+            });
             return res.json({token, message: "You are logged In"});
         }else{
             return res.status(401).json({error: 'Password does not match'});
