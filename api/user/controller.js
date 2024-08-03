@@ -33,16 +33,21 @@ const generateToken = (user) => {
 
 const registerUser = async (req, res) => {
     console.log("HELLO");
-    const {name, email, password} = req.body;
-    const user = await User.findOne({email});
-    if(user){
-        return res.status(400).json({error: 'User already exists'});
-    }else{
-        const hashedPassword = await encryptPassword(password);
-        const newUser = await new User({name, email, password: hashedPassword});
-        newUser.save();
-        return res.status(200).json({message: 'User created successfully'});
-    }
+   try {
+        const {name, email, password} = req.body;
+        const user = await User.findOne({email});
+        if(user){
+            return res.status(400).json({error: 'User already exists'});
+        }else{
+            const hashedPassword = await encryptPassword(password);
+            const newUser = await new User({name, email, password: hashedPassword});
+            newUser.save();
+            return res.status(201).json({message: 'User created successfully'});
+        }   
+   } catch (error) {
+    console.log(error);
+    
+   }
 }
 
 
