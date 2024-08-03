@@ -13,7 +13,7 @@ app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
-    origin: 'https://danceclassdashboard.vercel.app', // your frontend's domain
+    origin: '*', // your frontend's domain
     credentials: true,
 }));
 
