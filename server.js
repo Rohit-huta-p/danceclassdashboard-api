@@ -14,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
     origin: 'https://danceclassdashboard.vercel.app',
+    // origin: 'http://localhost:3000',
     credentials: true,
 }));
 

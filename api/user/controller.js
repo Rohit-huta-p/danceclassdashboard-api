@@ -62,8 +62,9 @@ const loginUser = async (req, res) => {
             console.log(isPassChecked);
             const token = generateToken(user._id);
             res.cookie('token', token, {
+                
                 secure: true, // Set to true if using HTTPS
-                sameSite: 'Strict', // Adjust according to your cross-site requirements
+                sameSite: 'None', // Adjust according to your cross-site requirements
             });
             return res.json({token, message: "You are logged In"});
         }else{
