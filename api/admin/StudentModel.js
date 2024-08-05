@@ -30,7 +30,11 @@ const feeHistorySchema = new mongoose.Schema({
   
 
 const StudentSchema = new mongoose.Schema({
-
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
     name: {
         type: String,
         // required: true,
@@ -56,7 +60,7 @@ const StudentSchema = new mongoose.Schema({
     },
     feeStatus: {
         type: String,
-        enum: ['pending', 'done'],
+        enum: ['pending', 'paid'],
         default: 'pending',
     },
     balance: {

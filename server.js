@@ -25,24 +25,19 @@ app.use(cors({
 
 // DATABASE
 const mongoose = require('mongoose');
-const authenticate  = require('./api/user/authenticate.js');
 const MONGO_URI = process.env.MONGO_URI 
 
 // ROUTES
 const userRoute = require('./api/user/routes')
-const studentRouter = require('./api/admin/studentRouter.js')
+const studentRouter = require('./api/admin/studentRouter.js');
+const authenticate = require('./api/authenticate.js');
 
-// Verify route
 
-app.get('/verify', authenticate,(req, res) => {
-    res.send('This is a protected route');
-    }
-);
 
 
 app.use("/api/user", userRoute);
 
-app.use("/api/admin", studentRouter)
+app.use("/api/admin" ,studentRouter)
 
 
 const startServer  = async () => {

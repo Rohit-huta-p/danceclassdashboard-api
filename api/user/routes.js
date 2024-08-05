@@ -1,6 +1,7 @@
 const express = require("express")
 const {registerUser, loginUser, logout, fetchUserDetails} = require("./controller");
-const authenticate = require("./authenticate");
+const authenticate = require("../authenticate");
+
 const router = express.Router();
 
 

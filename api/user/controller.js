@@ -54,25 +54,32 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
 
     const {email, password} = req.body;
+    console.log(req.body);
+    
 
-    const user = await User.findOne({email});
-    if(user){
-        const isPassChecked = await comparePass(password, user.password);
-        if(isPassChecked){
-            console.log(isPassChecked);
-            const token = generateToken(user._id);
-            res.cookie('token', token, {
-                
-                secure: true, // Set to true if using HTTPS
-                sameSite: 'None', // Adjust according to your cross-site requirements
-            });
-            return res.json({token, message: "You are logged In"});
-        }else{
-            return res.status(401).json({error: 'Password does not match'});
-        }
+    if(!email || !password){
+        return res.status(400).json({error: "Please enter Email or Password If missing"});
     }else{
-        return res.status(404).json({error: 'Email Not Found!'});
-    }
+
+            const user = await User.findOne({email});
+            if(user){
+                const isPassChecked = await comparePass(password, user.password);
+                if(isPassChecked){
+                    console.log(isPassChecked);
+                    const token = generateToken(user);
+                    res.cookie('token', token, {
+                        // httpOnly: true
+                        secure: true, // Set to true if using HTTPS
+                        sameSite: 'None', // Adjust according to your cross-site requirements
+                    });
+                    return res.status(200).json({token, message: "You are logged In"});
+                }else{
+                    return res.status(401).json({error: 'Password does not match'});
+                }
+            }else{
+                return res.status(404).json({error: 'Email Not Found!'});
+            }
+        }
 }
 
 

@@ -2,6 +2,7 @@ const { generateFeeHistoryPdf } = require('./pdfGenerator');
 const StudentModel = require('./StudentModel');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
+const User = require('../user/model');
 
 // Schedule
 cron.schedule('0 0 1 * *', async() => {
@@ -22,15 +23,21 @@ cron.schedule('0 0 1 * *', async() => {
 
 // ADD STUDENT
 const addstudent = async (req, res) => {
-
+    
     try {
+        console.log("hello");
+        console.log(req.user);
+        
+        
         const { name, age, dateOfJoining, batch, feeStatus, balance, contact } = req.body;
         let imageUrl;
+       
         if(req.file){
             imageUrl = req.file.path;
         }else{
             imageUrl = "https://res.cloudinary.com/dempyh9cj/image/upload/v1721107625/image_vikjmz.png";
         }
+
 
     
         const newStudent = new StudentModel({
@@ -42,7 +49,8 @@ const addstudent = async (req, res) => {
             Image: imageUrl,
             feeStatus,
             balance,
-            feeHistory: [{ status: feeStatus, date: new Date() }] 
+            feeHistory: [{ status: feeStatus, date: new Date() }],
+            createdBy: req.user.userId,
         });
       
        
@@ -53,15 +61,21 @@ const addstudent = async (req, res) => {
     }
     
 }
-
-// GET STUDENTS
 const getStudents = async (req, res) => {
-    const students = await StudentModel.find();
-
-    if(students){
-        return res.status(200).json({students: students});
+    const { userId } = req.user;
+  
+    try {
+      const students = await StudentModel.find({ createdBy: userId });
+  
+      if (students.length > 0) {
+        return res.status(200).json({ students });
+      } else {
+        return res.status(200).json({ message: "No students found" });
+      }
+    } catch (error) {
+      return res.status(500).json({ error: error, message: "Internal Server Error" });
     }
-}
+  };
 // Delete Students
 const deletestudent = async (req, res) => {
 
@@ -81,8 +95,9 @@ const deletestudent = async (req, res) => {
 const feeUpdate = async (req, res) => {
     try {
         const id = req.params.id;
+
+        console.log(id);
         const {feeStatus} = req.body;
-        console.log(id, feeStatus);
         const student = await StudentModel.findById(id);
 
 
