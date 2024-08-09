@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express();
-
+const {corsConfigLocal, corsConfigProduction} = require('./api/user/Config.js')
 
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -12,11 +12,7 @@ const PORT = process.env.PORT || 8001
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors({
-    origin: 'https://danceclassdashboard.vercel.app',
-    // origin: 'http://localhost:3000',
-    credentials: true,
-}));
+app.use(cors(corsConfigProduction));
 
 
 
@@ -31,7 +27,6 @@ const MONGO_URI = process.env.MONGO_URI
 const userRoute = require('./api/user/routes')
 const studentRouter = require('./api/admin/studentRouter.js');
 const authenticate = require('./api/authenticate.js');
-
 
 
 

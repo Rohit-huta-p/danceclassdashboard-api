@@ -22,7 +22,8 @@ const comparePass = async (password, hashedPassword) => {
 }
 
 // Token
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const { localCookieConfig, productionCookieConfig } = require('./Config');
 
 // COOKIE
 
@@ -67,11 +68,9 @@ const loginUser = async (req, res) => {
                 if(isPassChecked){
                     console.log(isPassChecked);
                     const token = generateToken(user);
-                    res.cookie('token', token, {
-                        // httpOnly: true
-                        secure: true, // Set to true if using HTTPS
-                        sameSite: 'None', // Adjust according to your cross-site requirements
-                    });
+            
+                    
+                    res.cookie('token', token, productionCookieConfig);
                     return res.status(200).json({token, message: "You are logged In"});
                 }else{
                     return res.status(401).json({error: 'Password does not match'});
