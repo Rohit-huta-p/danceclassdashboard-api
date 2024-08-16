@@ -62,17 +62,13 @@ const StudentSchema = new mongoose.Schema({
         type: String,
         default: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToiRnzzyrDtkmRzlAvPPbh77E-Mvsk3brlxQ&s'
     },
-    feeStatus: {
-        type: String,
-        enum: ['pending', 'paid'],
-        default: 'pending',
-    },
-    balance: {
-        type: Number,
-        default: 0,
-    },
     fees: {
       type: Number,
+      default: 0
+    },
+    feesPaid: {
+      type: Number,
+      default: 0
     },
     feeHistory: [feeHistorySchema],
     attendance: [attendanceSchema],

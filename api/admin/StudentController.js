@@ -4,22 +4,6 @@ const cron = require('node-cron');
 const moment = require('moment-timezone');
 const User = require('../user/model');
 
-// Schedule
-cron.schedule('0 0 1 * *', async() => {
-    try {
-        const students = await StudentModel.find();
-        students.forEach(async (student) => {
-            student.feeHistory.push({status: student.feeStatus, date: new Date()});
-            student.feeStatus = 'pending';
-            await student.save();
-            console.log('Fee status reset and history updated for all students');
-        })
-    } catch (error) {
-        console.error('Error resetting fee status:', error);
-
-    }
-})
-
 // cron.schedule('0 0 * * *', async() => {
 //     try {
 //         const students = await StudentModel.find();
@@ -42,7 +26,7 @@ const addstudent = async (req, res) => {
     try {
       
         
-        const { name, age, dateOfJoining, batch, feeStatus, balance, contact, fees } = req.body;
+        const { name, age, dateOfJoining, batch, contact, fees, feesPaid } = req.body;
 
         let imageUrl;
        
@@ -61,10 +45,9 @@ const addstudent = async (req, res) => {
             dateOfJoining,
             batch,
             Image: imageUrl,
-            feeStatus,
-            balance,
             fees,
-            feeHistory: [{ status: feeStatus, date: new Date() }],
+            feesPaid,
+            feeHistory: [{ status: 'pending', date: new Date() }],
             createdBy: req.user.userId,
         });
       
@@ -81,7 +64,8 @@ const getStudents = async (req, res) => {
   
     try {
       const students = await StudentModel.find({ createdBy: userId });
-  
+       
+        
       if (students.length > 0) {
         return res.status(200).json({ students });
       } else {
@@ -111,28 +95,49 @@ const feeUpdate = async (req, res) => {
     try {
         const id = req.params.id;
 
-        const {feeStatus, balance, addSubtractBalance} = req.body;
+        const {name, age, dateOfJoining, batch, contact, fees, feesPaid } = req.body;
+        const updateData = req.body;
+        
         const student = await StudentModel.findById(id);
-        console.log(req.body);
+        Object.keys(updateData).forEach(key => {
+            if(key !== 'feesPaid') { // Exclude 'feesPaid' from this general update logic
+                if(updateData[key]){
+                    console.log("INSIDE");
+                    
+                    student[key] = updateData[key];
+                }
+        
+            }
+        });
 
+      
 
         if(student){
-            if(feeStatus != ''){
-                student.feeHistory.push({status: feeStatus, date: new Date()});
-                student.feeStatus = feeStatus;
-            }else if(balance  ){
-                console.log("Addition",balance + student.balance,typeof (balance + student.balance));
-                console.log("SUBTRACTION",balance - student.balance,typeof (balance - student.balance));
-                
-                student.balance = addSubtractBalance === 'add' ? 
-                                        Number(student.balance) + Number(balance) : student.balance - balance;
-                student.balance = student.balance <= 0 ? 0 : student.balance;
-            }
-
-            await student.save();
-            console.log(student.balance);
             
-            return res.status(200).json({message: "Fee Updated", data: student});
+            if(feesPaid){
+    
+                student.feesPaid = Number(student.feesPaid) + Number(feesPaid);
+                
+              
+                if(student.feesPaid >= student.fees){
+                    student.feesPaid = student.fees;
+                    student.feeHistory.push({status: 'paid', date: new Date()});
+                    await student.save();
+                    return res.status(200).json({suceess: true,message: "Student FULLY PAID", data: student});
+                    
+                }else {
+                    student.feeHistory.push({status: 'pending', date: new Date()});
+                    await student.save();
+                    return res.status(200).json({success: true, message: `Student fees pending -  ${student.fees - student.feesPaid}`, data: student});
+                }
+            }else{
+                await student.save();
+                return res.status(200).json({data: student});
+            }
+       
+
+       
+            
         }else {
             res.status(404).json({ message: 'Student not found' });
           }
@@ -165,14 +170,12 @@ const downloadFeeHistory = async (req, res) => {
 
 const upateAttendance = async (req, res) => {
     const attendanceData  = req.body;
-    console.log("ATTENDANCE DATA: ",req.body);
     
     try {
         
         for(const everyObject of attendanceData){
             let {id, attendance, date} = everyObject;
-            console.log("iknjkjmnkjm:",everyObject.attendance);
-            
+      
             // converting to IST
             date = moment(date).tz('Asia/Kolkata').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ (z)');
             const formatDate = (date) => { return moment(date).tz('Asia/Kolkata').format('DD/MM/YYYY');}
@@ -192,10 +195,8 @@ const upateAttendance = async (req, res) => {
                     const attendanceDate = formatDate(att.date);
                     
                     const entryDate = formatDate(date);
-                    console.log(attendanceDate === entryDate);
                     return attendanceDate === entryDate;
                 });
-                console.log(index);
                 
                 if (index !== -1) {
                     // Update the existing attendance record
@@ -211,7 +212,6 @@ const upateAttendance = async (req, res) => {
                     });
                 }
                 await student.save();
-                console.log(student);
                 
                 }
             }
@@ -239,11 +239,29 @@ const deleteAttendance = async (req, res) => {
 const calCollectedAmount = async (req, res) => {
     const { userId } = req.user;
     const students = await StudentModel.find({ createdBy: userId });
+   
     let totalAmount = 0;
-    console.log(students);
-    
+    let totalFees = 0;
+    let totaStudents = 0;
+    students.forEach((student) => {
+        totalAmount = totalAmount + student.feesPaid;
+        totalFees = totalFees + student.fees;
+        
+    })
+    return res.status(200).json({totalAmount, totalFees});
   
 
 } 
 
-module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount};
+
+const studentPerMonth =  async (req, res) => {
+    const { id } = req.params;
+    
+    const user = await User.findOne({_id: id});
+    if(user){
+        return res.status(200).json({studentsPerMonth: user.studentsPerMonth})
+    }
+    
+}
+
+module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount, studentPerMonth};
