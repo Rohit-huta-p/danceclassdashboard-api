@@ -20,16 +20,31 @@ cron.schedule('0 0 1 * *', async() => {
     }
 })
 
+// cron.schedule('0 0 * * *', async() => {
+//     try {
+//         const students = await StudentModel.find();
+//         students.forEach(async (student) => {
+//             student.attendance.map(entry => {
+//                 entry.disabled = false;
+//             })
+//             await student.save();
+//             console.log('Fee status reset and history updated for all students');
+//         })
+//     } catch (error) {
+//         console.error('Error resetting fee status:', error);
+
+//     }
+// })
 
 // ADD STUDENT
 const addstudent = async (req, res) => {
     
     try {
-        console.log("hello");
-        console.log(req.user);
-        
+      
         
         const { name, age, dateOfJoining, batch, feeStatus, balance, contact } = req.body;
+        console.log(typeof balance);
+        
         let imageUrl;
        
         if(req.file){
@@ -96,16 +111,27 @@ const feeUpdate = async (req, res) => {
     try {
         const id = req.params.id;
 
-        console.log(id);
-        const {feeStatus} = req.body;
+        const {feeStatus, balance, addSubtractBalance} = req.body;
         const student = await StudentModel.findById(id);
+        console.log(req.body);
 
 
         if(student){
-            student.feeHistory.push({status: feeStatus, date: new Date()});
-            student.feeStatus = feeStatus;
+            if(feeStatus != ''){
+                student.feeHistory.push({status: feeStatus, date: new Date()});
+                student.feeStatus = feeStatus;
+            }else if(balance  ){
+                console.log("Addition",balance + student.balance,typeof (balance + student.balance));
+                console.log("SUBTRACTION",balance - student.balance,typeof (balance - student.balance));
+                
+                student.balance = addSubtractBalance === 'add' ? 
+                                        Number(student.balance) + Number(balance) : student.balance - balance;
+                student.balance = student.balance <= 0 ? 0 : student.balance;
+            }
 
             await student.save();
+            console.log(student.balance);
+            
             return res.status(200).json({message: "Fee Updated", data: student});
         }else {
             res.status(404).json({ message: 'Student not found' });
@@ -156,8 +182,7 @@ const upateAttendance = async (req, res) => {
                 if (!student) {
                     return res.status(404).json({ message: "Student not found" });
                 }
-                console.log();
-                
+          
                // Find the index of the existing attendance record for the same date
                 const index = student.attendance.findIndex(att => {
                     console.log(formatDate(att.date));
@@ -173,6 +198,7 @@ const upateAttendance = async (req, res) => {
                 if (index !== -1) {
                     // Update the existing attendance record
                     student.attendance[index].status = attendance;
+                    student.attendance[index].disabled = true;
                 } else {
                     // Create a new attendance record
                     console.log(date);
@@ -185,7 +211,7 @@ const upateAttendance = async (req, res) => {
                 await student.save();
     
                 }
-                return res.status(200).json({ message: "Attendance data updated successfully" });
+                return res.status(200).json({ message: "Attendance data updated successfully"});
         }
             
 

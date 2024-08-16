@@ -14,6 +14,10 @@ const attendanceSchema = new mongoose.Schema({
       enum: ['present', 'absent'],
       required: true,
     },
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
     // Optional fields (if needed)
     reason: {
       type: String,
