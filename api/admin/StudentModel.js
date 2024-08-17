@@ -71,6 +71,9 @@ const StudentSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    fees: {
+      type: Number,
+    },
     feeHistory: [feeHistorySchema],
     attendance: [attendanceSchema],
     createAt: {

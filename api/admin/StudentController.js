@@ -42,9 +42,8 @@ const addstudent = async (req, res) => {
     try {
       
         
-        const { name, age, dateOfJoining, batch, feeStatus, balance, contact } = req.body;
-        console.log(typeof balance);
-        
+        const { name, age, dateOfJoining, batch, feeStatus, balance, contact, fees } = req.body;
+
         let imageUrl;
        
         if(req.file){
@@ -64,6 +63,7 @@ const addstudent = async (req, res) => {
             Image: imageUrl,
             feeStatus,
             balance,
+            fees,
             feeHistory: [{ status: feeStatus, date: new Date() }],
             createdBy: req.user.userId,
         });
@@ -165,12 +165,14 @@ const downloadFeeHistory = async (req, res) => {
 
 const upateAttendance = async (req, res) => {
     const attendanceData  = req.body;
-
+    console.log("ATTENDANCE DATA: ",req.body);
+    
     try {
         
         for(const everyObject of attendanceData){
             let {id, attendance, date} = everyObject;
-
+            console.log("iknjkjmnkjm:",everyObject.attendance);
+            
             // converting to IST
             date = moment(date).tz('Asia/Kolkata').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ (z)');
             const formatDate = (date) => { return moment(date).tz('Asia/Kolkata').format('DD/MM/YYYY');}
@@ -185,12 +187,12 @@ const upateAttendance = async (req, res) => {
           
                // Find the index of the existing attendance record for the same date
                 const index = student.attendance.findIndex(att => {
-                    console.log(formatDate(att.date));
+ 
                     
                     const attendanceDate = formatDate(att.date);
-                    console.log(date);
                     
                     const entryDate = formatDate(date);
+                    console.log(attendanceDate === entryDate);
                     return attendanceDate === entryDate;
                 });
                 console.log(index);
@@ -201,7 +203,7 @@ const upateAttendance = async (req, res) => {
                     student.attendance[index].disabled = true;
                 } else {
                     // Create a new attendance record
-                    console.log(date);
+       
                     student.attendance.push({
                     student: student._id,
                     date: date,
@@ -209,10 +211,11 @@ const upateAttendance = async (req, res) => {
                     });
                 }
                 await student.save();
-    
+                console.log(student);
+                
                 }
-                return res.status(200).json({ message: "Attendance data updated successfully"});
-        }
+            }
+            return res.status(200).json({ message: "Attendance data updated successfully"});
             
 
     } catch (error) {
@@ -233,5 +236,14 @@ const deleteAttendance = async (req, res) => {
     }
 }
 
+const calCollectedAmount = async (req, res) => {
+    const { userId } = req.user;
+    const students = await StudentModel.find({ createdBy: userId });
+    let totalAmount = 0;
+    console.log(students);
+    
+  
 
-module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance};
+} 
+
+module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount};
