@@ -70,8 +70,8 @@ const loginUser = async (req, res) => {
                     const token = generateToken(user);
             
                     
-                    res.cookie('token', token, localCookieConfig);
-                    // res.cookie('token', token, productionCookieConfig);
+                    // res.cookie('token', token, localCookieConfig);
+                    res.cookie('token', token, productionCookieConfig);
                     return res.status(200).json({token, message: "You are logged In"});
                 }else{
                     return res.status(401).json({error: 'Password does not match'});
