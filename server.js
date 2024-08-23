@@ -14,7 +14,7 @@ app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(cors(corsConfigProduction));
-app.use(cors(corsConfigProduction));
+app.use(cors(corsConfigLocal));
 
 
 

@@ -10,7 +10,7 @@
 
 
 const corsConfigProduction = {
-    origin: 'https://danceclassdashboard.vercel.app',
+    origin: 'https://studioflowie.vercel.app',
     credentials: true,
 }
 
