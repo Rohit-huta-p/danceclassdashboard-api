@@ -29,7 +29,7 @@ const { localCookieConfig, productionCookieConfig } = require('./Config');
 
 
 const generateToken = (user) => {
-    return jwt.sign({ userId: user._id, username: user.name }, process.env.JWT_SECRET, {expiresIn: "3h"})
+    return jwt.sign({ userId: user._id, username: user.name, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {expiresIn: "3h"})
 }
 
 const registerUser = async (req, res) => {
@@ -70,8 +70,8 @@ const loginUser = async (req, res) => {
                     const token = generateToken(user);
             
                     
-                    // res.cookie('token', token, localCookieConfig);
                     res.cookie('token', token, productionCookieConfig);
+                    // res.cookie('token', token, productionCookieConfig);
                     return res.status(200).json({token, message: "You are logged In"});
                 }else{
                     return res.status(401).json({error: 'Password does not match'});

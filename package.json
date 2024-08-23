@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "html-pdf": "^3.0.1",
     "jsonwebtoken": "^9.0.2",
     "moment-timezone": "^0.5.45",
     "mongoose": "^8.4.4",
@@ -25,6 +26,7 @@
     "node-cron": "^3.0.3",
     "nodemon": "^3.1.4",
     "pdfkit": "^0.15.0",
-    "pdfkit-table": "^0.1.99"
+    "pdfkit-table": "^0.1.99",
+    "twilio": "^5.2.2"
   }
 }

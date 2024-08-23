@@ -94,31 +94,22 @@ const deletestudent = async (req, res) => {
 const feeUpdate = async (req, res) => {
     try {
         const id = req.params.id;
-
         const {name, age, dateOfJoining, batch, contact, fees, feesPaid } = req.body;
-        const updateData = req.body;
-        
+        const updateData = req.body; 
         const student = await StudentModel.findById(id);
-        Object.keys(updateData).forEach(key => {
-            if(key !== 'feesPaid') { // Exclude 'feesPaid' from this general update logic
-                if(updateData[key]){
-                    console.log("INSIDE");
-                    
-                    student[key] = updateData[key];
-                }
-        
-            }
-        });
-
-      
-
         if(student){
+            Object.keys(updateData).forEach(key => {
+                if(key !== 'feesPaid') { // Exclude 'feesPaid' from this general update logic
+                    if(updateData[key]){
+                        console.log("INSIDE");
+                        student[key] = updateData[key];
+                    }
             
+                }
+            });
             if(feesPaid){
-    
+
                 student.feesPaid = Number(student.feesPaid) + Number(feesPaid);
-                
-              
                 if(student.feesPaid >= student.fees){
                     student.feesPaid = student.fees;
                     student.feeHistory.push({status: 'paid', date: new Date()});
@@ -126,7 +117,7 @@ const feeUpdate = async (req, res) => {
                     return res.status(200).json({suceess: true,message: "Student FULLY PAID", data: student});
                     
                 }else {
-                    student.feeHistory.push({status: 'pending', date: new Date()});
+                    student.feeHistory.push({status: 'pending', date: new Date(),currPaid: feesPaid ,balance: student.feesPaid});
                     await student.save();
                     return res.status(200).json({success: true, message: `Student fees pending -  ${student.fees - student.feesPaid}`, data: student});
                 }
@@ -263,5 +254,51 @@ const studentPerMonth =  async (req, res) => {
     }
     
 }
+const path = require('path');
+const pdf = require('html-pdf')
+const pdfTemplate =require('./pdfTemplate');
+const pdfTemplateMonthly =require('./pdfTemplate');
+const createPdf = (req, res) => {
+    const {name, amount} = req.body
+    const outputPath = path.resolve(__dirname, '../../../frontend/src/assets/', `${name}_${new Date().getMonth()}_${new Date().getFullYear()}.pdf`);
+   
+    pdf.create(pdfTemplate(req.body), {}).toFile(outputPath, (err) => {
+        if(err) {
+            return console.log('error');
+        }
+    res.send(Promise.resolve())
+      });
+}
 
-module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount, studentPerMonth};
+const fetchPdf = (req, res) => {
+    const { name, amount } = req.query; // Use req.query to access GET query parameters
+
+    console.log(name);
+    
+    const outputPath = path.resolve(__dirname, '../../../frontend/src/assets/', `${name}_${new Date().getMonth()}_${new Date().getFullYear()}.pdf`);
+   
+    
+    res.sendFile(outputPath);
+  };
+
+const pt_MonthlyReport = require('./pt_MonthlyReport');
+const monthlyPendingFeesReportCreatePdf = (req, res) => {
+    const {students} = req.body
+    const outputPath = path.resolve(__dirname, '../../../frontend/src/assets/', `${new Date().getMonth()}_${new Date().getFullYear()}_Fee_Report.pdf`);
+   
+    pdf.create(pt_MonthlyReport(req.body), {}).toFile(outputPath, (err) => {
+        if(err) {
+            return console.log('error');
+        }
+    res.send(Promise.resolve())
+      });
+}
+const monthlyPendingFeesReport_FetchPdf = (req, res) => {
+    const outputPath = path.resolve(__dirname, '../../../frontend/src/assets/', `${new Date().getMonth()}_${new Date().getFullYear()}_Fee_Report.pdf`);
+    res.sendFile(outputPath);
+  };
+
+module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount, studentPerMonth, 
+    createPdf, fetchPdf,
+    monthlyPendingFeesReportCreatePdf, monthlyPendingFeesReport_FetchPdf
+};

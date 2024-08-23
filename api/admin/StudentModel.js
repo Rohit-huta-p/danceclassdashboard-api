@@ -27,9 +27,13 @@ const attendanceSchema = new mongoose.Schema({
     },
   });
 
-const feeHistorySchema = new mongoose.Schema({
+const feeHistorySchema = new mongoose.Schema(
+  {
     status: String,
-    date: Date
+    date: Date,
+    currPaid: Number,
+    balance: Number,
+    
   });
   
 
