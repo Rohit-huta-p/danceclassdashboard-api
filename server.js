@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express();
-const axios = require('axios')
+const axios = require('axios');
 const {corsConfigLocal, corsConfigProduction} = require('./api/user/Config.js')
 
 const cookieParser = require('cookie-parser');
@@ -13,12 +13,8 @@ const PORT = process.env.PORT || 8001
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors(corsConfigProduction));
-// app.use(cors(corsConfigLocal));
-
-
-
-
+// app.use(cors(corsConfigProduction));
+app.use(cors(corsConfigLocal));
 
 
 
@@ -36,7 +32,33 @@ const User = require('./api/user/model.js'); // Adjust the path accordingly
 const authenticate = require('./api/authenticate.js');
 
 
+app.get('/api/vehicle', async (req, res) => {
 
+  
+    const options = {
+        method: 'POST',
+        url: 'https://rto-vehicle-information-verification-india.p.rapidapi.com/api/v1/rc/vehicleinfo',
+        headers: {
+          'x-rapidapi-key': '1bcb403f9dmshc6adf150aa8ad17p1c1694jsn4384549f3221',
+          'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
+          'Content-Type': 'application/json'
+        },
+        data: {
+          reg_no: 'MH14LU0704',
+          consent: 'Y',
+          consent_text: 'I hear by declare my consent agreement for fetching my information via AITAN Labs API'
+        }
+      };
+  
+      try {
+        const response = await axios.request(options);
+        res.json(response.data);
+      } catch (error) {
+        console.error('Error fetching vehicle data:', error);
+        res.status(500).json({ message: 'Failed to fetch vehicle data' });
+      }
+});
+  
 
 app.use("/api/user", userRoute);
 

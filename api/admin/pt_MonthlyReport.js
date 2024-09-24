@@ -1,5 +1,21 @@
+const moment = require('moment-timezone');
 module.exports = (students) => {
-   students.map(student => console.log(student.name));
+  const month = "08";
+    
+    const filteredStudents 
+      = students.map(student => {
+                  return student.feeHistory
+                                .map(entry =>{ 
+                                    const currDate= moment(entry.date).tz('Asia/Kolkata').format('DD/MM/YYYY');
+                                      return currDate.slice(3, 5) === month ? student : null;
+                                    }
+                                  )  
+                }
+              );
+
+    console.log(filteredStudents);
+    
+  
 
    const today = new Date();
    return `
@@ -100,7 +116,7 @@ module.exports = (students) => {
 
                <tbody>
                ${
-                  students.map(student => (
+                students.map(student => (
                      `
                                <tr>
                                     <td class="title">
@@ -110,7 +126,7 @@ module.exports = (students) => {
                                         ${student.feeHistory[student.feeHistory.length-1].status}
                                     </td>
                                     <td>
-                                       ${student.feeHistory[student.feeHistory.length-1].balance || 'N/A'}
+                                       ${student.feeHistory[student.feeHistory.length-1].balance }
                                     </td>
                                </tr>
                      `

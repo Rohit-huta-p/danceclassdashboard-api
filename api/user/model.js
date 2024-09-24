@@ -32,6 +32,14 @@ const userSchema = mongoose.Schema({
             }
         }
     ],
+    ageGroups: Array,
+    batchTimings:  [
+        {
+            ageGroup: String,
+            timings: [String],
+            fees: Number,
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now

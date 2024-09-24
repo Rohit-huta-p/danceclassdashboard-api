@@ -33,7 +33,7 @@ const generateToken = (user) => {
 }
 
 const registerUser = async (req, res) => {
-    console.log("HELLO");
+
    try {
         const {name, email, password} = req.body;
         const user = await User.findOne({email});
@@ -55,31 +55,27 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
 
     const {email, password} = req.body;
-    console.log(req.body);
+
+
+
+    const user = await User.findOne({email});
+    if(user){
+        const isPassChecked = await comparePass(password, user.password);
+        if(isPassChecked){
+            console.log(isPassChecked);
+            const token = generateToken(user);
     
-
-    if(!email || !password){
-        return res.status(400).json({error: "Please enter Email or Password If missing"});
-    }else{
-
-            const user = await User.findOne({email});
-            if(user){
-                const isPassChecked = await comparePass(password, user.password);
-                if(isPassChecked){
-                    console.log(isPassChecked);
-                    const token = generateToken(user);
             
-                    
-                    // res.cookie('token', token, localCookieConfig);
-                    res.cookie('token', token, productionCookieConfig);
-                    return res.status(200).json({token, message: "You are logged In"});
-                }else{
-                    return res.status(401).json({error: 'Password does not match'});
-                }
-            }else{
-                return res.status(404).json({error: 'Email Not Found!'});
-            }
+            res.cookie('token', token, localCookieConfig);
+            // res.cookie('token', token, productionCookieConfig);
+            return res.status(200).json({token, message: "You are logged In"});
+        }else{
+            return res.status(401).json({error: 'Password does not match'});
         }
+    }else{
+        return res.status(404).json({error: 'Email Not Found!'});
+    }
+   
 }
 
 
@@ -103,4 +99,138 @@ const fetchUserDetails = (req, res) => {
     }
 }
 
-module.exports = {registerUser, loginUser, logout, fetchUserDetails}
+const addBatch = async (req, res) => {
+    try {
+        const user = req.user;
+        const {batches} = req.body;
+        const user_found = await User.findById(user.userId);
+        if(!user_found){
+            return res.status(404).json({error: 'User Not Found!'});
+        }
+        console.log(batches);
+        
+
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+
+const addAgeGroup = async (req, res) => {
+    const {userId} = req.user;
+    const user_found = await User.findById(userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    const {ageGroupName} = req.body;
+    const ageGroupFound = await user_found.ageGroups.find((every_ageGroupName) => every_ageGroupName === ageGroupName);
+    if(ageGroupFound){
+        return res.status(400).json({error: 'Age Group Already Exists!'});
+    }else{
+        user_found.ageGroups.push(ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1));
+        console.log(user_found.ageGroups);
+        
+        await user_found.save();
+        return res.status(200).json({message: 'Age Group Added Successfully!', ageGroups: user_found.ageGroups});
+    }
+    
+
+}
+
+
+const deleteAgeGroup = async (req, res) => {
+    const {userId} = req.user;
+    const user_found = await User.findById(userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    const {ageGroupName} = req.body;
+    user_found.ageGroups = user_found.ageGroups.filter(groupName => groupName !== ageGroupName);
+    console.log(user_found.ageGroups);
+    await user_found.save();
+    return res.status(200).json({message: "Category Deleted"})
+
+}
+
+const addTimings = async (req, res) => {
+    const user = req.user;
+    const user_found = await User.findById(user.userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    const {groupName, timing} = req.body;
+
+    console.log(req.body);
+    console.log(user_found);
+    
+    const group = await user_found.batchTimings.find((batchTime) => batchTime.ageGroup === groupName);
+
+    if (group) {
+        // If the group exists, add the new timing to its timings array if it's not already there
+        if (!group.timings.includes(timing)) {
+            group.timings.push(timing);
+        } else {
+            return res.status(400).json({ message: 'Timing already exists for this age group', batchTimings: user_found.batchTimings.timings });
+        }
+    } else {
+        // If the group doesn't exist, create a new one with the provided timing
+        user_found.batchTimings.push({
+            ageGroup: groupName,
+            timings: [timing]
+        });
+    }
+    console.log(user_found.batchTimings);
+    
+    await user_found.save();
+    return res.status(200).json({message: 'Timing Added Successfully!',batchTimings: user_found.batchTimings.timings});
+}
+
+const fetchAgeGroups = async(req, res) => {
+    const user = req.user;
+    const user_found = await User.findById(user.userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    console.log(user_found.ageGroups);
+    return res.status(200).json({ageGroups:user_found.ageGroups, batchTimings: user_found.batchTimings})
+}
+
+const deleteTiming = async (req, res) => {
+    const user = req.user;
+    const user_found = await User.findById(user.userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    const {groupName, timing} = req.body;
+    const group = await user_found.batchTimings.find((batchTime) => batchTime.ageGroup ===groupName);
+    group.timings = group.timings.filter(item => item !== timing);
+    await user_found.save();
+    return res.status(200).json({
+        message: 'Timing deleted successfully!',
+        batchTimings: user_found.batchTimings
+    });
+}
+
+const addFees = async (req, res) => {
+    const user = req.user;
+    const user_found = await User.findById(user.userId);
+    if(!user_found){
+        return res.status(404).json({error: 'User Not Found!'});
+    }
+    const {groupName, fees} = req.body;
+    console.log(groupName, fees);
+    
+    user_found.batchTimings.map((batchTime) => console.log(batchTime));
+    // user_found.batchTimings.map((batchTime) => console.log(batchTime));
+    const group = await user_found.batchTimings.find((batchTime) => batchTime.ageGroup === groupName);
+
+    
+    group.fees = fees;
+       
+    console.log(user_found.batchTimings);
+    
+    await user_found.save();
+    return res.status(200).json({message: 'Fees Added Successfully!', batchTimings: fees});
+   
+}
+module.exports = {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchAgeGroups, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees}

@@ -123,14 +123,10 @@ const feeUpdate = async (req, res) => {
                 }
             }else{
                 await student.save();
-                return res.status(200).json({data: student});
+                return res.status(200).json({success: true, data: student});
             }
-       
-
-       
-            
         }else {
-            res.status(404).json({ message: 'Student not found' });
+            res.status(404).json({ success: true,message: 'Student not found' });
           }
     } catch (error) {
         res.status(500).json({ message: 'Error updating fee status', error: error.message });
@@ -284,13 +280,14 @@ const fetchPdf = (req, res) => {
 const pt_MonthlyReport = require('./pt_MonthlyReport');
 const monthlyPendingFeesReportCreatePdf = (req, res) => {
     const {students} = req.body
+
     const outputPath = path.resolve(__dirname, '../../../frontend/src/assets/', `${new Date().getMonth()}_${new Date().getFullYear()}_Fee_Report.pdf`);
    
     pdf.create(pt_MonthlyReport(req.body), {}).toFile(outputPath, (err) => {
         if(err) {
             return console.log('error');
         }
-    res.send(Promise.resolve())
+            res.send(Promise.resolve())
       });
 }
 const monthlyPendingFeesReport_FetchPdf = (req, res) => {
