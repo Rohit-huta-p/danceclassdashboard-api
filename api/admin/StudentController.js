@@ -24,12 +24,9 @@ const User = require('../user/model');
 const addstudent = async (req, res) => {
     
     try {
-      
-        
         const { name, age, dateOfJoining, batch, contact, fees, feesPaid } = req.body;
-
+        const parsedFeesPaid = parseFloat(feesPaid);
         let imageUrl;
-       
         if(req.file){
             imageUrl = req.file.path;
         }else{
@@ -108,7 +105,8 @@ const feeUpdate = async (req, res) => {
                 }
             });
             if(feesPaid){
-
+                console.log(feesPaid);
+                
                 student.feesPaid = Number(student.feesPaid) + Number(feesPaid);
                 if(student.feesPaid >= student.fees){
                     student.feesPaid = student.fees;
@@ -229,7 +227,6 @@ const calCollectedAmount = async (req, res) => {
    
     let totalAmount = 0;
     let totalFees = 0;
-    let totaStudents = 0;
     students.forEach((student) => {
         totalAmount = totalAmount + student.feesPaid;
         totalFees = totalFees + student.fees;

@@ -4,8 +4,9 @@
 }
  const productionCookieConfig = {
 
-    secure: true, // Set to true if using HTTPS
-    sameSite: 'None', // Adjust according to your cross-site requirements
+    httpOnly: true,
+    secure: true,  // Ensures cookies are sent over HTTPS
+    sameSite: 'None', 
 }
 
 

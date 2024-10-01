@@ -32,32 +32,29 @@ const User = require('./api/user/model.js'); // Adjust the path accordingly
 const authenticate = require('./api/authenticate.js');
 
 
-app.get('/api/vehicle', async (req, res) => {
-
-  
+app.post('/api/vehicle', async (req, res) => {
     const options = {
         method: 'POST',
         url: 'https://rto-vehicle-information-verification-india.p.rapidapi.com/api/v1/rc/vehicleinfo',
         headers: {
-          'x-rapidapi-key': '1bcb403f9dmshc6adf150aa8ad17p1c1694jsn4384549f3221',
+          'x-rapidapi-key': '23c06548b3msh8b6e4d865a2b77dp113c1ejsn822245bedb09',
           'x-rapidapi-host': 'rto-vehicle-information-verification-india.p.rapidapi.com',
           'Content-Type': 'application/json'
         },
         data: {
-          reg_no: 'MH14LU0704',
+          reg_no: 'MH14KJ5880',
           consent: 'Y',
           consent_text: 'I hear by declare my consent agreement for fetching my information via AITAN Labs API'
         }
       };
-  
-      try {
+
+    try {
         const response = await axios.request(options);
-        res.json(response.data);
-      } catch (error) {
-        console.error('Error fetching vehicle data:', error);
-        res.status(500).json({ message: 'Failed to fetch vehicle data' });
-      }
-});
+        console.log("data", response.data);
+    } catch (error) {
+        console.error(error);
+    }
+    });
   
 
 app.use("/api/user", userRoute);
