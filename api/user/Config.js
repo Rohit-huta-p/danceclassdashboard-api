@@ -5,7 +5,7 @@
  const productionCookieConfig = {
 
     httpOnly: true,
-    secure: true,  // Ensures cookies are sent over HTTPS
+   // Ensures cookies are sent over HTTPS
     sameSite: 'None', 
 }
 
