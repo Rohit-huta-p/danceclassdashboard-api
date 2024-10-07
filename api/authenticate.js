@@ -17,7 +17,7 @@ const authenticate = (req, res, next) => {
     next();
   } catch (ex) {
     if (ex.name === 'TokenExpiredError') {
-      res.clearCookie('token'); // Clear the token cookie
+      
       return res.status(401).json({ message: 'Token expired.' });
     }
     res.status(400).json({ message: 'Invalid token.' });

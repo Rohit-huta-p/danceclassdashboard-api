@@ -1,5 +1,5 @@
 const express = require("express")
-const {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchAgeGroups, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees} = require("./controller");
+const {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchBatches, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees} = require("./controller");
 const authenticate = require("../authenticate");
 
 const router = express.Router();
@@ -14,7 +14,7 @@ router.get("/logout", logout);
 // Age groups
 router.post("/addbatch",authenticate,  addBatch);
 router.post("/add/agegroup",authenticate,  addAgeGroup);
-router.get("/fetchagegroups",authenticate,  fetchAgeGroups);
+router.get("/fetchbatches",authenticate,  fetchBatches);
 router.post("/deleteagegroup",authenticate,  deleteAgeGroup);
 
 // Batch Timings

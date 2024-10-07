@@ -29,20 +29,22 @@ const { localCookieConfig, productionCookieConfig } = require('./Config');
 
 
 const generateToken = (user) => {
-    return jwt.sign({ userId: user._id, username: user.name, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {expiresIn: "3h"})
+    return jwt.sign({ userId: user._id, username: user.studioName, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {expiresIn: "3h"})
 }
 
 const registerUser = async (req, res) => {
 
    try {
-        const {name, email, password} = req.body;
+        const {studioName, email, password} = req.body;
+        console.log(studioName);
+        
         const user = await User.findOne({email});
         if(user){
             return res.status(400).json({error: 'User already exists'});
         }else{
             const hashedPassword = await encryptPassword(password);
-            const newUser = await new User({name, email, password: hashedPassword});
-            newUser.save();
+            const newUser = await new User({studioName, email, password: hashedPassword});
+            await newUser.save();
             return res.status(201).json({message: 'User created successfully'});
         }   
    } catch (error) {
@@ -55,9 +57,6 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
 
     const {email, password} = req.body;
-
-
-
     const user = await User.findOne({email});
     if(user){
         const isPassChecked = await comparePass(password, user.password);
@@ -120,16 +119,22 @@ const addAgeGroup = async (req, res) => {
     if(!user_found){
         return res.status(404).json({error: 'User Not Found!'});
     }
-    const {ageGroupName} = req.body;
-    const ageGroupFound = await user_found.ageGroups.find((every_ageGroupName) => every_ageGroupName === ageGroupName);
+    let {ageGroupName} = req.body;
+    ageGroupName = ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1);
+
+    
+    const ageGroupFound = await user_found.batches.find((batch) => batch.ageGroup === ageGroupName);
+
+
     if(ageGroupFound){
-        return res.status(400).json({error: 'Age Group Already Exists!'});
-    }else{
-        user_found.ageGroups.push(ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1));
-        console.log(user_found.ageGroups);
         
+        return res.status(409).json({error: 'Age Group Already Exists!'});
+    }else{
+        user_found.batches.push({ageGroup: ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1)});
         await user_found.save();
-        return res.status(200).json({message: 'Age Group Added Successfully!', ageGroups: user_found.ageGroups});
+        let ageGoroups = []
+        user_found.batches.map(batch => ageGoroups.push(batch.ageGroup));
+        return res.status(200).json({message: 'Age Group Added Successfully!', ageGroup: ageGroupName});
     }
     
 
@@ -143,8 +148,8 @@ const deleteAgeGroup = async (req, res) => {
         return res.status(404).json({error: 'User Not Found!'});
     }
     const {ageGroupName} = req.body;
-    user_found.ageGroups = user_found.ageGroups.filter(groupName => groupName !== ageGroupName);
-    console.log(user_found.ageGroups);
+    user_found.batches = user_found.batches.filter(batch => batch.ageGroup !== ageGroupName);
+    console.log(user_found.batches);
     await user_found.save();
     return res.status(200).json({message: "Category Deleted"})
 
@@ -161,14 +166,14 @@ const addTimings = async (req, res) => {
     console.log(req.body);
     console.log(user_found);
     
-    const group = await user_found.batchTimings.find((batchTime) => batchTime.ageGroup === groupName);
+    const group = await user_found.batches.find((batch) => batch.ageGroup === groupName);
 
     if (group) {
         // If the group exists, add the new timing to its timings array if it's not already there
         if (!group.timings.includes(timing)) {
             group.timings.push(timing);
         } else {
-            return res.status(400).json({ message: 'Timing already exists for this age group', batchTimings: user_found.batchTimings.timings });
+            return res.status(400).json({ message: 'Timing already exists for this age group' });
         }
     } else {
         // If the group doesn't exist, create a new one with the provided timing
@@ -180,17 +185,19 @@ const addTimings = async (req, res) => {
     console.log(user_found.batchTimings);
     
     await user_found.save();
-    return res.status(200).json({message: 'Timing Added Successfully!',batchTimings: user_found.batchTimings.timings});
+    return res.status(200).json({message: 'Timing Added Successfully!'});
 }
 
-const fetchAgeGroups = async(req, res) => {
+const fetchBatches = async(req, res) => {
     const user = req.user;
     const user_found = await User.findById(user.userId);
+
+    
     if(!user_found){
         return res.status(404).json({error: 'User Not Found!'});
     }
-    console.log(user_found.ageGroups);
-    return res.status(200).json({ageGroups:user_found.ageGroups, batchTimings: user_found.batchTimings})
+    console.log(user_found.batches);
+    return res.status(200).json({batches:user_found.batches})
 }
 
 const deleteTiming = async (req, res) => {
@@ -218,17 +225,17 @@ const addFees = async (req, res) => {
     const {groupName, fees} = req.body;
     console.log(groupName, fees);
     
-    user_found.batchTimings.map((batchTime) => console.log(batchTime));
+    // user_found.batches.map((batch) => console.log(batchTime));
     // user_found.batchTimings.map((batchTime) => console.log(batchTime));
-    const group = await user_found.batchTimings.find((batchTime) => batchTime.ageGroup === groupName);
+    const group = await user_found.batches.find((batch) => batch.ageGroup === groupName);
 
     
     group.fees = fees;
        
-    console.log(user_found.batchTimings);
+    console.log(user_found.batches);
     
     await user_found.save();
     return res.status(200).json({message: 'Fees Added Successfully!', batchTimings: fees});
    
 }
-module.exports = {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchAgeGroups, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees}
+module.exports = {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchBatches, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees}
