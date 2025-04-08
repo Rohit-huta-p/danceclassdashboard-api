@@ -14,17 +14,7 @@ const attendanceSchema = new mongoose.Schema({
       enum: ['present', 'absent'],
       required: true,
     },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // Optional fields (if needed)
-    reason: {
-      type: String,
-    },
-    remarks: {
-      type: String,
-    },
+  
   });
 
 const feeHistorySchema = new mongoose.Schema(
@@ -38,11 +28,11 @@ const feeHistorySchema = new mongoose.Schema(
   
 
 const StudentSchema = new mongoose.Schema({
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     name: {
         type: String,
         // required: true,

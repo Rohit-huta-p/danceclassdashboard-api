@@ -13,9 +13,8 @@ const PORT = process.env.PORT || 8001
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors(corsConfigProduction));
-// app.use(cors(corsConfigLocal));
-
+// app.use(cors(corsConfigProduction));
+app.use(cors(corsConfigLocal));
 
 
 // DATABASE
@@ -42,7 +41,7 @@ app.post('/api/vehicle', async (req, res) => {
           'Content-Type': 'application/json'
         },
         data: {
-          reg_no: 'MH14KJ5880',
+          reg_no: 'MH14KC5537',
           consent: 'Y',
           consent_text: 'I hear by declare my consent agreement for fetching my information via AITAN Labs API'
         }

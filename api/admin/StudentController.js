@@ -3,7 +3,8 @@ const StudentModel = require('./StudentModel');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 const User = require('../user/model');
-
+const path = require('path');
+const pdf = require('html-pdf')
 // cron.schedule('0 0 * * *', async() => {
 //     try {
 //         const students = await StudentModel.find();
@@ -247,8 +248,7 @@ const studentPerMonth =  async (req, res) => {
     }
     
 }
-const path = require('path');
-const pdf = require('html-pdf')
+
 const pdfTemplate =require('./pdfTemplate');
 const pdfTemplateMonthly =require('./pdfTemplate');
 const createPdf = (req, res) => {
