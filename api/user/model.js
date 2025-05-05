@@ -20,6 +20,14 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    batches:  [
+        {
+            batchTitle: String,
+            timings: String,
+            fees: Number,
+        }
+    ],
+
     studentsPerMonth: [
         {
             month: {
@@ -30,14 +38,6 @@ const userSchema = mongoose.Schema({
                 type: Number,
                 required: true
             }
-        }
-    ],
-
-    batches:  [
-        {
-            ageGroup: String,
-            timings: [String],
-            fees: Number,
         }
     ],
     createdAt: {

@@ -29,7 +29,7 @@ const { localCookieConfig, productionCookieConfig } = require('./Config');
 
 
 const generateToken = (user) => {
-    return jwt.sign({ userId: user._id, username: user.studioName, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {expiresIn: "3h"})
+    return jwt.sign({ userId: user._id, username: user.studioName, isAdmin: user.isAdmin }, process.env.JWT_SECRET, {expiresIn: "7d"})
 }
 
 const registerUser = async (req, res) => {
@@ -99,13 +99,17 @@ const fetchUserDetails = (req, res) => {
 const addBatch = async (req, res) => {
     try {
         const user = req.user;
-        const {batches} = req.body;
+        const {batchTitle, timings, fees} = req.body;
         const user_found = await User.findById(user.userId);
         if(!user_found){
             return res.status(404).json({error: 'User Not Found!'});
         }
-        console.log(batches);
+
+        user_found.batches.push({batchTitle, timings, fees});
+        console.log(user_found.batches);
         
+        await user_found.save();
+        return res.status(200).json({message: 'Batch Added Successfully!', batches: user_found.batches});
 
     } catch (error) {
         console.error('Error fetching user details:', error);
@@ -113,42 +117,44 @@ const addBatch = async (req, res) => {
     }
 }
 
-const addAgeGroup = async (req, res) => {
+const addBatchTitle = async (req, res) => {
     const {userId} = req.user;
     const user_found = await User.findById(userId);
     if(!user_found){
         return res.status(404).json({error: 'User Not Found!'});
     }
-    let {ageGroupName} = req.body;
-    ageGroupName = ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1);
+    let {batchTitle} = req.body;
 
     
-    const ageGroupFound = await user_found.batches.find((batch) => batch.ageGroup === ageGroupName);
+    batchTitle = batchTitle.charAt(0).toUpperCase() + batchTitle.slice(1);
+
+    console.log(batchTitle);
+    
+    const ageGroupFound = await user_found.batches.find((batch) => batch.batchTitle === batchTitle);
 
 
     if(ageGroupFound){
         
         return res.status(409).json({error: 'Age Group Already Exists!'});
     }else{
-        user_found.batches.push({ageGroup: ageGroupName.charAt(0).toUpperCase() + ageGroupName.slice(1)});
+        user_found.batches.push({batchName: batchTitle});
         await user_found.save();
-        let ageGoroups = []
-        user_found.batches.map(batch => ageGoroups.push(batch.ageGroup));
-        return res.status(200).json({message: 'Age Group Added Successfully!', ageGroup: ageGroupName});
+
+        return res.status(200).json({message: 'Age Group Added Successfully!', batchName: batchTitle});
     }
     
 
 }
 
 
-const deleteAgeGroup = async (req, res) => {
+const deleteBatchTitle = async (req, res) => {
     const {userId} = req.user;
     const user_found = await User.findById(userId);
     if(!user_found){
         return res.status(404).json({error: 'User Not Found!'});
     }
-    const {ageGroupName} = req.body;
-    user_found.batches = user_found.batches.filter(batch => batch.ageGroup !== ageGroupName);
+    const {batchTitle} = req.body;
+    user_found.batches = user_found.batches.filter(batch => batch.batchTitle !== batchTitle);
     console.log(user_found.batches);
     await user_found.save();
     return res.status(200).json({message: "Category Deleted"})
@@ -238,4 +244,8 @@ const addFees = async (req, res) => {
     return res.status(200).json({message: 'Fees Added Successfully!', batchTimings: fees});
    
 }
-module.exports = {registerUser, loginUser, logout, fetchUserDetails, addBatch, fetchBatches, addAgeGroup, deleteAgeGroup, addTimings, deleteTiming, addFees}
+module.exports = {registerUser, loginUser, logout, fetchUserDetails, 
+            addBatch, fetchBatches, 
+            addBatchTitle, deleteBatchTitle, 
+            addTimings, deleteTiming, 
+            addFees}

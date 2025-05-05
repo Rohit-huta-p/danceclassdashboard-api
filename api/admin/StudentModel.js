@@ -1,21 +1,6 @@
 const mongoose = require('mongoose');
 
-const attendanceSchema = new mongoose.Schema({
-    student: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Student', // Reference the Student model
-      required: true,
-    },
-    date: {
-      type: String,
-    },
-    status: {
-      type: String,
-      enum: ['present', 'absent'],
-      required: true,
-    },
-  
-  });
+
 
 const feeHistorySchema = new mongoose.Schema(
   {
@@ -65,7 +50,6 @@ const StudentSchema = new mongoose.Schema({
       default: 0
     },
     feeHistory: [feeHistorySchema],
-    attendance: [attendanceSchema],
     createAt: {
         type: Date,
         default: Date.now,

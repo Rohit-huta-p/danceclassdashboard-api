@@ -1,5 +1,6 @@
 const { generateFeeHistoryPdf } = require('./pdfGenerator');
 const StudentModel = require('./StudentModel');
+
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 const User = require('../user/model');
@@ -88,49 +89,82 @@ const deletestudent = async (req, res) => {
     
 }
 
-// Fee Update
-const feeUpdate = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const {name, age, dateOfJoining, batch, contact, fees, feesPaid } = req.body;
-        const updateData = req.body; 
-        const student = await StudentModel.findById(id);
-        if(student){
-            Object.keys(updateData).forEach(key => {
-                if(key !== 'feesPaid') { // Exclude 'feesPaid' from this general update logic
-                    if(updateData[key]){
-                        console.log("INSIDE");
-                        student[key] = updateData[key];
-                    }
-            
-                }
-            });
-            if(feesPaid){
-                console.log(feesPaid);
-                
-                student.feesPaid = Number(student.feesPaid) + Number(feesPaid);
-                if(student.feesPaid >= student.fees){
-                    student.feesPaid = student.fees;
-                    student.feeHistory.push({status: 'paid', date: new Date()});
-                    await student.save();
-                    return res.status(200).json({suceess: true,message: "Student FULLY PAID", data: student});
-                    
-                }else {
-                    student.feeHistory.push({status: 'pending', date: new Date(),currPaid: feesPaid ,balance: student.feesPaid});
-                    await student.save();
-                    return res.status(200).json({success: true, message: `Student fees pending -  ${student.fees - student.feesPaid}`, data: student});
-                }
-            }else{
-                await student.save();
-                return res.status(200).json({success: true, data: student});
-            }
-        }else {
-            res.status(404).json({ success: true,message: 'Student not found' });
-          }
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating fee status', error: error.message });
+const updateStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(req.body);
+    
+    const { feesPaid, ...updateData } = req.body;
+
+    const student = await StudentModel.findById(id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
     }
-}
+
+    // Update general fields (excluding 'feesPaid')
+    for (const key in updateData) {
+      if (updateData[key] !== undefined && key !== 'feesPaid') {
+        student[key] = updateData[key];
+      }
+    }
+
+    // Convert to number and validate
+    console.log(typeof feesPaid);
+    
+    const parsedFeesPaid = Number(feesPaid);
+
+    console.log(feesPaid);
+    
+    if (parsedFeesPaid) {
+      console.log("TYPE student.feesPaid" + typeof student.feesPaid);
+      console.log("TYPE parsedFeesPaid" +typeof parsedFeesPaid);
+      
+      student.feesPaid = Number(student.feesPaid) + parsedFeesPaid;
+
+      if (student.feesPaid >= student.fees) {
+        student.feesPaid = student.fees;
+        student.feeHistory.push({ status: 'paid', currPaid: parsedFeesPaid,date: new Date() });
+
+        await student.save();
+        return res.status(200).json({
+          success: true,
+          message: 'Student FULLY PAID',
+          data: student
+        });
+      } else {
+        student.feeHistory.push({
+          status: 'pending',
+          date: new Date(),
+          currPaid: parsedFeesPaid,
+          balance: student.fees - student.feesPaid
+        });
+
+        await student.save();
+        return res.status(200).json({
+          success: true,
+          message: `Student fees pending - ${student.fees - student.feesPaid}`,
+          data: student
+        });
+      }
+    }
+
+    // Save without fee changes
+    await student.save();
+    return res.status(200).json({ success: true, data: student });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: 'Error updating fee status',
+      error: error.message
+    });
+  }
+};
+
+  
+
+
+  
 
 // getFeeHistory
 const downloadFeeHistory = async (req, res) => {
@@ -154,73 +188,8 @@ const downloadFeeHistory = async (req, res) => {
 };
 
 
-const upateAttendance = async (req, res) => {
-    const attendanceData  = req.body;
-    
-    try {
-        
-        for(const everyObject of attendanceData){
-            let {id, attendance, date} = everyObject;
-      
-            // converting to IST
-            date = moment(date).tz('Asia/Kolkata').format('ddd MMM DD YYYY HH:mm:ss [GMT]ZZ (z)');
-            const formatDate = (date) => { return moment(date).tz('Asia/Kolkata').format('DD/MM/YYYY');}
-            if(!id || !attendance){
-                return res.status(400).json({ message: "Missing required fields (id, attendance)" });
-            }else{
-                const student = await StudentModel.findById(id);
-    
-                if (!student) {
-                    return res.status(404).json({ message: "Student not found" });
-                }
-          
-               // Find the index of the existing attendance record for the same date
-                const index = student.attendance.findIndex(att => {
- 
-                    
-                    const attendanceDate = formatDate(att.date);
-                    
-                    const entryDate = formatDate(date);
-                    return attendanceDate === entryDate;
-                });
-                
-                if (index !== -1) {
-                    // Update the existing attendance record
-                    student.attendance[index].status = attendance;
-                    student.attendance[index].disabled = true;
-                } else {
-                    // Create a new attendance record
-       
-                    student.attendance.push({
-                    student: student._id,
-                    date: date,
-                    status: attendance
-                    });
-                }
-                await student.save();
-                
-                }
-            }
-            return res.status(200).json({ message: "Attendance data updated successfully"});
-            
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error updating attendance data" });
-    } 
-   
-}
 
-const deleteAttendance = async (req, res) => {
-    const {id} = req.params;
-
-    const student = await StudentModel.findById(id);
-    if(student){
-        student.attendance = [];
-        await student.save();
-        return res.status(200).json({ message: 'All attendance records deleted successfully' });
-    }
-}
 
 const calCollectedAmount = async (req, res) => {
     const { userId } = req.user;
@@ -275,6 +244,7 @@ const fetchPdf = (req, res) => {
   };
 
 const pt_MonthlyReport = require('./pt_MonthlyReport');
+const { log } = require('console');
 const monthlyPendingFeesReportCreatePdf = (req, res) => {
     const {students} = req.body
 
@@ -292,7 +262,11 @@ const monthlyPendingFeesReport_FetchPdf = (req, res) => {
     res.sendFile(outputPath);
   };
 
-module.exports = {addstudent, deletestudent, getStudents, feeUpdate, downloadFeeHistory, upateAttendance, deleteAttendance, calCollectedAmount, studentPerMonth, 
+module.exports = {
+    addstudent, deletestudent, getStudents, 
+    updateStudent, 
+    
+    downloadFeeHistory, calCollectedAmount, studentPerMonth, 
     createPdf, fetchPdf,
     monthlyPendingFeesReportCreatePdf, monthlyPendingFeesReport_FetchPdf
 };

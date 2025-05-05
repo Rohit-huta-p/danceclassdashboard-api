@@ -24,6 +24,7 @@ const MONGO_URI = process.env.MONGO_URI
 // ROUTES
 const userRoute = require('./api/user/routes')
 const studentRouter = require('./api/admin/studentRouter.js');
+const attendanceRoutes = require("./api/admin/routes/attendanceRoutes.js")
 
 const cron = require('node-cron');
 const StudentModel = require('./api/admin/StudentModel.js'); // Adjust the path accordingly
@@ -56,10 +57,11 @@ app.post('/api/vehicle', async (req, res) => {
     });
   
 
+// ROUTES
+
 app.use("/api/user", userRoute);
-
 app.use("/api/admin" ,authenticate, studentRouter)
-
+app.use("/api/student/attendance", attendanceRoutes)
 const scheduleMonthlyTasks = () => {
     cron.schedule('0 0 1 * *', async () => {
         console.log("This task runs at midnight on the 1st of every month.");
